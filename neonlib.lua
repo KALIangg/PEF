@@ -1,138 +1,222 @@
-local NeonHub = {}
+local NeonXsx = {}
 
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- ⚙️ SETTINGS
-local THEME_COLOR = Color3.fromRGB(200, 20, 20)
-local BG_GRADIENT = ColorSequence.new{
-   ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 0, 0)),
-   ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 0, 0))
-}
+-- CONFIGS
+local THEME_COLOR = Color3.fromRGB(180, 0, 0)
+local FONT = Enum.Font.GothamBold
 
--- 📦 CONTAINER
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-ScreenGui.Name = "NeonHub"
+-- GUI CONTAINER
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "NeonXsxHub"
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game:GetService("CoreGui")
 
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.2, 0, 0.2, 0)
-MainFrame.Size = UDim2.new(0, 500, 0, 500)
-MainFrame.Name = "MainFrame"
-MainFrame.ClipsDescendants = true
+-- MAIN CONTAINER
+local Main = Instance.new("Frame", ScreenGui)
+Main.Name = "MainUI"
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+Main.Size = UDim2.new(0, 550, 0, 520)
+Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
 
-local UICorner = Instance.new("UICorner", MainFrame)
-UICorner.CornerRadius = UDim.new(0, 12)
+local mainCorner = Instance.new("UICorner", Main)
+mainCorner.CornerRadius = UDim.new(0, 12)
 
-local UIStroke = Instance.new("UIStroke", MainFrame)
-UIStroke.Color = THEME_COLOR
-UIStroke.Thickness = 2
-UIStroke.Transparency = 0.1
+local mainStroke = Instance.new("UIStroke", Main)
+mainStroke.Color = THEME_COLOR
+mainStroke.Thickness = 2
+mainStroke.Transparency = 0.15
 
--- ✨ BACKGROUND ANIMADO
-local ParticleEmitter = Instance.new("ParticleEmitter")
-ParticleEmitter.Parent = MainFrame
-ParticleEmitter.Texture = "rbxassetid://6132524406"
-ParticleEmitter.Rate = 50
-ParticleEmitter.Lifetime = NumberRange.new(5, 7)
-ParticleEmitter.Size = NumberSequence.new(1)
-ParticleEmitter.Speed = NumberRange.new(10)
-ParticleEmitter.VelocitySpread = 360
-ParticleEmitter.LightEmission = 1
-ParticleEmitter.Transparency = NumberSequence.new(0.5)
-ParticleEmitter.ZOffset = 1
-ParticleEmitter.Rotation = NumberRange.new(0, 360)
+-- Layout de elementos
+local Layout = Instance.new("UIListLayout", Main)
+Layout.Padding = UDim.new(0, 8)
+Layout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- 🔻 LAYOUT
-local UIListLayout = Instance.new("UIListLayout", MainFrame)
-UIListLayout.Padding = UDim.new(0, 10)
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+-- DRAG SYSTEM
+local dragging, dragInput, dragStart, startPos
 
-local function createBaseElement(name, height)
+local function update(input)
+	local delta = input.Position - dragStart
+	Main.Position = UDim2.new(
+		startPos.X.Scale,
+		startPos.X.Offset + delta.X,
+		startPos.Y.Scale,
+		startPos.Y.Offset + delta.Y
+	)
+end
+
+Main.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Main.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+Main.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		update(input)
+	end
+end)
+
+-- BACKGROUND PARTICLES
+local bgParticles = Instance.new("ParticleEmitter")
+bgParticles.Parent = Main
+bgParticles.Texture = "rbxassetid://6132524406"
+bgParticles.LightEmission = 1
+bgParticles.Size = NumberSequence.new(1)
+bgParticles.Rate = 60
+bgParticles.Lifetime = NumberRange.new(6)
+bgParticles.Speed = NumberRange.new(15)
+bgParticles.Transparency = NumberSequence.new(0.4)
+bgParticles.VelocitySpread = 360
+bgParticles.ZOffset = 2
+bgParticles.Rotation = NumberRange.new(0, 360)
+
+-- TOGGLE MENU KEY
+Main.Visible = true
+UserInputService.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
+	if input.KeyCode == Enum.KeyCode.RightControl then
+		Main.Visible = not Main.Visible
+	end
+end)
+
+
+-- UTILS
+local function createElement(height)
 	local frame = Instance.new("Frame")
-	frame.Name = name
-	frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	frame.Size = UDim2.new(1, -20, 0, height)
+	frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	frame.BorderSizePixel = 0
-	frame.Size = UDim2.new(1, -20, 0, height or 40)
-	frame.Parent = MainFrame
-	frame.BackgroundTransparency = 0.1
+	frame.Position = UDim2.new(0, 10, 0, 0)
 
 	local corner = Instance.new("UICorner", frame)
-	corner.CornerRadius = UDim.new(0, 10)
+	corner.CornerRadius = UDim.new(0, 8)
 
 	local stroke = Instance.new("UIStroke", frame)
 	stroke.Color = THEME_COLOR
 	stroke.Thickness = 1
 
+	frame.LayoutOrder = 0
+
 	return frame
 end
 
-function NeonHub:CreateTitle(text)
-	local title = createBaseElement("Title", 40)
-	local label = Instance.new("TextLabel", title)
+-- 🟥 TITLE
+function NeonXsx:CreateTitle(text)
+	local titleFrame = createElement(40)
+	titleFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+	local label = Instance.new("TextLabel", titleFrame)
 	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
 	label.Text = text
 	label.TextColor3 = THEME_COLOR
-	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.GothamBold
-	label.TextSize = 22
+	label.Font = FONT
+	label.TextScaled = true
+
+	titleFrame.Parent = Main
 end
 
-function NeonHub:CreateSection(name)
-	local sec = createBaseElement(name, 30)
-	local label = Instance.new("TextLabel", sec)
+-- 🟨 SECTION
+function NeonXsx:CreateSection(name)
+	local section = createElement(30)
+
+	local label = Instance.new("TextLabel", section)
 	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
 	label.Text = name
 	label.TextColor3 = Color3.fromRGB(200, 200, 200)
+	label.Font = FONT
+	label.TextScaled = true
+
+	section.Parent = Main
+end
+
+-- 🟦 LABEL
+function NeonXsx:CreateLabel(text)
+	local labelFrame = createElement(28)
+	labelFrame.BackgroundTransparency = 1
+
+	local label = Instance.new("TextLabel", labelFrame)
+	label.Size = UDim2.new(1, 0, 1, 0)
 	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.GothamSemibold
-	label.TextSize = 18
+	label.Text = text
+	label.TextColor3 = Color3.fromRGB(230, 230, 230)
+	label.Font = Enum.Font.Gotham
+	label.TextScaled = true
+
+	labelFrame.Parent = Main
 end
 
-function NeonHub:CreateLabel(text)
-	local lbl = createBaseElement("Label", 30)
-	local txt = Instance.new("TextLabel", lbl)
-	txt.Size = UDim2.new(1, 0, 1, 0)
-	txt.Text = text
-	txt.TextColor3 = Color3.fromRGB(220, 220, 220)
-	txt.BackgroundTransparency = 1
-	txt.Font = Enum.Font.Gotham
-	txt.TextSize = 16
+-- ⚪ DIVIDER
+function NeonXsx:CreateDivider()
+	local line = Instance.new("Frame", Main)
+	line.Size = UDim2.new(1, -20, 0, 2)
+	line.Position = UDim2.new(0, 10, 0, 0)
+	line.BackgroundColor3 = THEME_COLOR
+	line.BorderSizePixel = 0
+	line.LayoutOrder = 0
 end
 
-function NeonHub:CreateButton(name, callback)
-	local btn = createBaseElement("Button", 35)
-	local b = Instance.new("TextButton", btn)
-	b.Size = UDim2.new(1, 0, 1, 0)
-	b.Text = name
-	b.BackgroundTransparency = 1
-	b.Font = Enum.Font.GothamBold
-	b.TextColor3 = THEME_COLOR
-	b.TextSize = 18
-	b.MouseButton1Click:Connect(callback)
+-- 🟩 BUTTON
+function NeonXsx:CreateButton(name, callback)
+	local btnFrame = createElement(35)
+
+	local btn = Instance.new("TextButton", btnFrame)
+	btn.Size = UDim2.new(1, 0, 1, 0)
+	btn.BackgroundTransparency = 1
+	btn.Text = name
+	btn.TextColor3 = THEME_COLOR
+	btn.Font = FONT
+	btn.TextScaled = true
+
+	btn.MouseButton1Click:Connect(callback)
+
+	btnFrame.Parent = Main
 end
 
-function NeonHub:CreateToggle(name, callback)
-	local toggle = createBaseElement("Toggle", 35)
-	local text = Instance.new("TextLabel", toggle)
-	text.Size = UDim2.new(0.8, 0, 1, 0)
-	text.Text = name
-	text.TextColor3 = Color3.fromRGB(200, 200, 200)
-	text.BackgroundTransparency = 1
-	text.Font = Enum.Font.Gotham
-	text.TextSize = 16
 
-	local btn = Instance.new("TextButton", toggle)
-	btn.Position = UDim2.new(0.85, 0, 0.2, 0)
-	btn.Size = UDim2.new(0.1, 0, 0.6, 0)
-	btn.Text = "OFF"
+-- 🟥 TOGGLE
+function NeonXsx:CreateToggle(name, callback)
+	local toggleFrame = createElement(35)
+
+	local label = Instance.new("TextLabel", toggleFrame)
+	label.Size = UDim2.new(0.75, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.Text = name
+	label.TextColor3 = Color3.fromRGB(220, 220, 220)
+	label.Font = FONT
+	label.TextScaled = true
+
+	local btn = Instance.new("TextButton", toggleFrame)
+	btn.Size = UDim2.new(0.2, 0, 0.6, 0)
+	btn.Position = UDim2.new(0.78, 0, 0.2, 0)
 	btn.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+	btn.Text = "OFF"
 	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 14
+	btn.Font = FONT
+	btn.TextScaled = true
 
 	local corner = Instance.new("UICorner", btn)
 	corner.CornerRadius = UDim.new(0, 8)
@@ -145,33 +229,62 @@ function NeonHub:CreateToggle(name, callback)
 		btn.BackgroundColor3 = state and THEME_COLOR or Color3.fromRGB(50, 0, 0)
 		callback(state)
 	end)
+
+	toggleFrame.Parent = Main
 end
 
-function NeonHub:CreateDropdown(name, options, default, callback)
-	local drop = createBaseElement("Dropdown", 35)
-	local dropdown = Instance.new("TextButton", drop)
-	dropdown.Size = UDim2.new(1, 0, 1, 0)
-	dropdown.Text = name .. ": " .. default
-	dropdown.BackgroundTransparency = 1
-	dropdown.Font = Enum.Font.Gotham
-	dropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
-	dropdown.TextSize = 16
+-- 🟦 DROPDOWN
+function NeonXsx:CreateDropdown(name, options, default, callback)
+	local dropdownFrame = createElement(35)
+
+	local button = Instance.new("TextButton", dropdownFrame)
+	button.Size = UDim2.new(1, 0, 1, 0)
+	button.BackgroundTransparency = 1
+	button.Text = name .. ": " .. default
+	button.TextColor3 = Color3.fromRGB(255, 255, 255)
+	button.Font = FONT
+	button.TextScaled = true
 
 	local current = default
 
-	dropdown.MouseButton1Click:Connect(function()
-		local choice = options[math.random(1, #options)]
-		current = choice
-		dropdown.Text = name .. ": " .. choice
-		callback(choice)
+	button.MouseButton1Click:Connect(function()
+		local listFrame = Instance.new("Frame", Main)
+		listFrame.Size = UDim2.new(1, -20, 0, (#options * 30))
+		listFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+		listFrame.BorderSizePixel = 0
+		listFrame.Position = UDim2.new(0, 10, 0, 0)
+
+		local corner = Instance.new("UICorner", listFrame)
+		corner.CornerRadius = UDim.new(0, 8)
+
+		local stroke = Instance.new("UIStroke", listFrame)
+		stroke.Color = THEME_COLOR
+		stroke.Thickness = 1
+
+		local layout = Instance.new("UIListLayout", listFrame)
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+		layout.Padding = UDim.new(0, 4)
+
+		for _, opt in pairs(options) do
+			local optBtn = Instance.new("TextButton", listFrame)
+			optBtn.Size = UDim2.new(1, 0, 0, 30)
+			optBtn.BackgroundColor3 = Color3.fromRGB(45, 0, 0)
+			optBtn.Text = opt
+			optBtn.Font = Enum.Font.Gotham
+			optBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+			optBtn.TextScaled = true
+
+			local corner = Instance.new("UICorner", optBtn)
+			corner.CornerRadius = UDim.new(0, 8)
+
+			optBtn.MouseButton1Click:Connect(function()
+				current = opt
+				button.Text = name .. ": " .. current
+				callback(current)
+				listFrame:Destroy()
+			end)
+		end
 	end)
-end
 
-function NeonHub:CreateDivider()
-	local div = Instance.new("Frame", MainFrame)
-	div.Size = UDim2.new(1, -20, 0, 2)
-	div.BackgroundColor3 = THEME_COLOR
-	div.BorderSizePixel = 0
+	dropdownFrame.Parent = Main
 end
-
-return NeonHub
