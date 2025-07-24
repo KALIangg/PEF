@@ -181,20 +181,32 @@ end
 
 -- 🟩 BUTTON
 function NeonXsx:CreateButton(name, callback)
-	local btnFrame = createElement(35)
+	local btnFrame = createElement(40)
+	btnFrame.BackgroundColor3 = Color3.fromRGB(35, 0, 0)
 
 	local btn = Instance.new("TextButton", btnFrame)
 	btn.Size = UDim2.new(1, 0, 1, 0)
-	btn.BackgroundTransparency = 1
+	btn.BackgroundColor3 = Color3.fromRGB(35, 0, 0)
+	btn.AutoButtonColor = true
 	btn.Text = name
 	btn.TextColor3 = THEME_COLOR
 	btn.Font = FONT
 	btn.TextScaled = true
+	btn.BackgroundTransparency = 0
+
+	local corner = Instance.new("UICorner", btn)
+	corner.CornerRadius = UDim.new(0, 8)
+
+	local stroke = Instance.new("UIStroke", btn)
+	stroke.Color = THEME_COLOR
+	stroke.Thickness = 1
+	stroke.Transparency = 0.1
 
 	btn.MouseButton1Click:Connect(callback)
 
 	btnFrame.Parent = Main
 end
+
 
 
 -- 🟥 TOGGLE
