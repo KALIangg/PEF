@@ -1,5 +1,19 @@
-local HttpService = game:GetService('HttpService')
-local executorId = '{executorId}'
+local HttpService = game:GetService("HttpService")
+
+local function generateExecutorId(length)
+    local charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    local result = {}
+
+    for i = 1, length do
+        local rand = math.random(1, #charset)
+        table.insert(result, string.sub(charset, rand, rand))
+    end
+
+    return table.concat(result)
+end
+
+local executorId = generateExecutorId(4)
+print("⚙️ Executor ID gerado: " .. executorId)
 local baseUrl = 'https://hypex-executor-default-rtdb.firebaseio.com/commands/' .. executorId .. '.json'
 local processed = {}
 
