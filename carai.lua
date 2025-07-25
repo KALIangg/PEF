@@ -150,6 +150,8 @@ Tab1:NewToggle("ESP", false, toggle_esp)
 
 Tab1:NewButton("Start Client Listener🎧", function()
     print("Starting client lua...")
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/KALIangg/PEF/refs/heads/main/client.lua"))()
+    print("Carregado sem problemas.")
 end)
 
 Tab1:NewButton("Start Player Sync👤", function()
